@@ -4,6 +4,8 @@ import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Cylinder;
@@ -19,6 +21,18 @@ import java.util.Map;
 import java.util.Set;
 
 public class Graph3DVisualization extends Application {
+    private double anchorX, anchorY;
+    private double anchorAngleX = 0;
+    private double anchorAngleY = 0;
+    private final double anchorAngleZ = 0;
+
+    private double cameraAngleX = 0;
+    private double cameraAngleY = 0;
+    private final double cameraAngleZ = 0;
+    private final double cameraDistance = -500;
+
+    private final PerspectiveCamera camera = new PerspectiveCamera(true);
+
     public static void main(String[] args) {
         launch(args);
     }
@@ -65,6 +79,7 @@ public class Graph3DVisualization extends Application {
 
             sphereMap.put(node, sphere);
             root.getChildren().add(sphere);
+            System.out.println("Node: " + node + " at (" + x + ", " + y + ", " + z + ")");
             i++;
         }
 
@@ -95,18 +110,52 @@ public class Graph3DVisualization extends Application {
             edgeCylinder.getTransforms().add(new javafx.scene.transform.Rotate(Math.toDegrees(Math.acos((z2 - z1) / distance)), javafx.scene.transform.Rotate.Y_AXIS));
 
             root.getChildren().add(edgeCylinder);
+            System.out.println("Edge: " + source + " -> " + target);
         }
 
         Scene scene = new Scene(root, 800, 600, true);
         scene.setFill(Color.BLACK);
 
-        PerspectiveCamera camera = new PerspectiveCamera(true);
-        camera.setTranslateZ(-500);
+        camera.setTranslateZ(cameraDistance);
+        camera.setNearClip(0.1);
+        camera.setFarClip(10000.0);
         scene.setCamera(camera);
+
+        initMouseControl(root, scene, primaryStage);
 
         primaryStage.setScene(scene);
         primaryStage.setTitle("3D Graph Visualization");
         primaryStage.show();
+    }
+
+    private void initMouseControl(Group root, Scene scene, Stage stage) {
+        RotateGroup rotateGroup = new RotateGroup();
+        rotateGroup.getChildren().add(root);
+
+        scene.setOnMousePressed(event -> {
+            anchorX = event.getSceneX();
+            anchorY = event.getSceneY();
+            anchorAngleX = cameraAngleX;
+            anchorAngleY = cameraAngleY;
+        });
+
+        scene.setOnMouseDragged(event -> {
+            cameraAngleX = anchorAngleX - (anchorY - event.getSceneY());
+            cameraAngleY = anchorAngleY + anchorX - event.getSceneX();
+            rotateGroup.setRotateX(cameraAngleX);
+            rotateGroup.setRotateY(cameraAngleY);
+        });
+
+        scene.setOnKeyPressed(event -> {
+            switch (event.getCode()) {
+                case W -> camera.setTranslateZ(camera.getTranslateZ() + 20);
+                case S -> camera.setTranslateZ(camera.getTranslateZ() - 20);
+                case A -> camera.setTranslateX(camera.getTranslateX() - 20);
+                case D -> camera.setTranslateX(camera.getTranslateX() + 20);
+                case Q -> camera.setTranslateY(camera.getTranslateY() - 20);
+                case E -> camera.setTranslateY(camera.getTranslateY() + 20);
+            }
+        });
     }
 
     private static Set<String> generateNodes(int minP, int maxP, int minS, int maxS) {
@@ -118,5 +167,25 @@ public class Graph3DVisualization extends Application {
             nodes.add("S" + i);
         }
         return nodes;
+    }
+}
+
+class RotateGroup extends Group {
+    private final javafx.scene.transform.Rotate r;
+    private final javafx.scene.transform.Rotate rx = new javafx.scene.transform.Rotate(0, javafx.scene.transform.Rotate.X_AXIS);
+    private final javafx.scene.transform.Rotate ry = new javafx.scene.transform.Rotate(0, javafx.scene.transform.Rotate.Y_AXIS);
+
+    RotateGroup() {
+        super();
+        r = new javafx.scene.transform.Rotate(0, javafx.scene.transform.Rotate.Z_AXIS);
+        getTransforms().addAll(r, rx, ry);
+    }
+
+    public void setRotateX(double angle) {
+        rx.setAngle(angle);
+    }
+
+    public void setRotateY(double angle) {
+        ry.setAngle(angle);
     }
 }
