@@ -19,20 +19,18 @@ import java.util.Set;
 
 public class GraphVisualization {
     public static void main(String[] args) {
-        // Define nodes
-        Set<String> nodeSet = new HashSet<>();
-        String[] nodes = {"P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10",
-                "P11", "P12", "P13", "P14", "P15", "P16", "P17", "P18", "P19", "P20",
-                "P21", "P22", "P23", "P24",
-                "S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10",
-                "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20",
-                "S21", "S22", "S23", "S24"};
-        for (String node : nodes) {
-            nodeSet.add(node);
-        }
+        
+        // Define the range for P and S nodes
+        int minP = 2; // must be 2
+        int maxP = 50;
+        int minS = 1; // must be 1
+        int maxS = 50;
+
+        // Generate nodes
+        Set<String> nodeSet = generateNodes(minP, maxP, minS, maxS);
 
         // Define rules for creating edges
-        int limit = 9;
+        int limit = 20;
         Set<Rule> rules = new HashSet<>();
         for (int i = 1; i <= limit; i++) {
             for (int j = i+1; j <= limit; j++) {
@@ -54,7 +52,7 @@ public class GraphVisualization {
 
         mxGraph.getModel().beginUpdate();
         try {
-            for (String node : nodes) {
+            for (String node : nodeSet) {
                 Object vertex = mxGraph.insertVertex(parent, null, node, 100, 100, 30, 30);
                 vertexMap.put(node, vertex);
             }
@@ -89,5 +87,18 @@ public class GraphVisualization {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        
+       
+    }
+    
+    private static Set<String> generateNodes(int minP, int maxP, int minS, int maxS) {
+        Set<String> nodes = new HashSet<>();
+        for (int i = minP; i <= maxP; i++) {
+            nodes.add("P" + i);
+        }
+        for (int i = minS; i <= maxS; i++) {
+            nodes.add("S" + i);
+        }
+        return nodes;
     }
 }
