@@ -22,15 +22,15 @@ public class GraphVisualization {
         
         // Define the range for P and S nodes
         int minP = 2; // must be 2
-        int maxP = 50;
+        int maxP = 200;
         int minS = 1; // must be 1
-        int maxS = 50;
+        int maxS = 200;
 
         // Generate nodes
         Set<String> nodeSet = generateNodes(minP, maxP, minS, maxS);
 
         // Define rules for creating edges
-        int limit = 20;
+        int limit = 50;
         Set<Rule> rules = new HashSet<>();
         for (int i = 1; i <= limit; i++) {
             for (int j = i+1; j <= limit; j++) {
