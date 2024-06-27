@@ -2,17 +2,17 @@ package linkedNetwork;
 
 public class StepsToSolve {
 
-    public static final int maxS = 4;
+    public static final int RECURSION_LIMIT = 20;
 
     public static String stepsToSolve(Pair pair, int minN, int maxN, int difference, int depth) {
-        if (depth >= maxS) {
+        if (depth > RECURSION_LIMIT) {
             return "X"; // Return "X" to indicate it exceeded the limit
         }
 
         int x = pair.first;
         int y = pair.second;
 
-        if (x == 1 && (HelperFunctions.isPrime(y) || HelperFunctions.isPrimeSquare(y))) {
+        if (x == 1 && (HelperFunctions.isPrime(y, HelperFunctions.generatePrimes(maxN)) || HelperFunctions.isPrimeSquare(y, HelperFunctions.generatePrimes(maxN)))) {
             return "1";
         } else {
             int S = x + y;
