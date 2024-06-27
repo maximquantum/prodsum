@@ -25,7 +25,7 @@ public class GraphVisualization {
 
         for (int k = 1; k <= 30; k++) {
             // Define the range for P and S nodes
-        	int difference = 7;
+        	int difference = 1;
             int minN = 1;
             int maxN = k;
 
@@ -154,7 +154,7 @@ public class GraphVisualization {
     private static Set<String> generateNodesFromPairs(int minN, int maxN, int difference) {
         Set<String> nodes = new HashSet<>();
         for (int i = minN; i <= maxN; i++) {
-            for (int j = i + difference; 2*i <= j && j <= maxN; j++) {
+            for (int j = max(i + difference,2*i); j <= maxN; j++) {
                 nodes.add("P" + (i * j));
                 nodes.add("S" + (i + j));
             }
@@ -225,10 +225,14 @@ class PairVectorSpace {
     public static Set<Pair> generatePairs(int minN, int maxN, int difference) {
         Set<Pair> pairs = new HashSet<>();
         for (int i = minN; i <= maxN; i++) {
-            for (int j = i + difference; 2*i <= j && j <= maxN; j++) {
+            for (int j = max(i + difference,2*i); j <= maxN; j++) {
                 pairs.add(new Pair(i, j));
             }
         }
         return pairs;
+    }
+
+    private static int max(int a, int b) {
+        return (a > b) ? a : b;
     }
 }
