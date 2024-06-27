@@ -21,10 +21,12 @@ import java.util.Set;
 
 public class GraphVisualization {
     public static void main(String[] args) {
-        
-        for (int k = 0; k <= 15; k++) {
-        
+        boolean visualizeZeroEdges = false; // Set this to true to visualize nodes with zero edges
+
+        for (int k = 1; k <= 20; k++) {
+            
             // Define the range for P and S nodes
+            int minN = 0;
             int maxN = k;
             int minP = 0; // must be 2
             int maxP = maxN * (maxN - 1);
@@ -36,7 +38,7 @@ public class GraphVisualization {
 
             // Define rules for creating edges
             Set<Rule> rules = new HashSet<>();
-            for (int i = 0; i <= maxN; i++) {
+            for (int i = minN; i <= maxN; i++) {
                 for (int j = i + 1; j <= maxN; j++) {
                     String first = "P" + (i * j);
                     String second = "S" + (i + j);
@@ -57,13 +59,7 @@ public class GraphVisualization {
 
             mxGraph.getModel().beginUpdate();
             try {
-                for (String node : nodeSet) {
-                    Object vertex = mxGraph.insertVertex(parent, null, node, 100, 100, 30, 30);
-                    vertexMap.put(node, vertex);
-                    edgeCountMap.put(vertex, 0);
-                }
-
-                // Add edges to the mxGraph
+                // Add edges to the mxGraph and update edge counts
                 for (DefaultEdge edge : graph.edgeSet()) {
                     String source = graph.getEdgeSource(edge);
                     String target = graph.getEdgeTarget(edge);
@@ -79,6 +75,16 @@ public class GraphVisualization {
 
                     Object sourceVertex = vertexMap.get(source);
                     Object targetVertex = vertexMap.get(target);
+                    if (sourceVertex == null) {
+                        sourceVertex = mxGraph.insertVertex(parent, null, source, 100, 100, 30, 30);
+                        vertexMap.put(source, sourceVertex);
+                        edgeCountMap.put(sourceVertex, 0);
+                    }
+                    if (targetVertex == null) {
+                        targetVertex = mxGraph.insertVertex(parent, null, target, 100, 100, 30, 30);
+                        vertexMap.put(target, targetVertex);
+                        edgeCountMap.put(targetVertex, 0);
+                    }
                     mxGraph.insertEdge(parent, null, label, sourceVertex, targetVertex);
                     edgeCountMap.put(sourceVertex, edgeCountMap.get(sourceVertex) + 1);
                     edgeCountMap.put(targetVertex, edgeCountMap.get(targetVertex) + 1);
@@ -93,18 +99,24 @@ public class GraphVisualization {
                     Map<String, Object> style = new HashMap<>();
                     if (vertex.startsWith("S")) {
                         int num = Integer.parseInt(vertex.substring(1));
-                        if (num >= 1 && num <= 2) {
+                        int ways = countSumWays(num, minN, maxN);
+                        if (ways == 0) {
+                            style.put(mxConstants.STYLE_FILLCOLOR, "grey");
+                        } else if (ways == 1) {
                             style.put(mxConstants.STYLE_FILLCOLOR, "green");
-                        } else if (num >= 3 && num <= 4) {
+                        } else if (ways == 2) {
                             style.put(mxConstants.STYLE_FILLCOLOR, "yellow");
                         } else {
                             style.put(mxConstants.STYLE_FILLCOLOR, "red");
                         }
                     } else if (vertex.startsWith("P")) {
                         int num = Integer.parseInt(vertex.substring(1));
-                        if (isPrime(num) || isPrimeSquare(num)) {
+                        int ways = countProductWays(num, minN, maxN);
+                        if (ways == 0) {
+                            style.put(mxConstants.STYLE_FILLCOLOR, "grey");
+                        } else if (ways == 1) {
                             style.put(mxConstants.STYLE_FILLCOLOR, "green");
-                        } else if (isProductOfTwoPrimes(num)) {
+                        } else if (ways == 2) {
                             style.put(mxConstants.STYLE_FILLCOLOR, "yellow");
                         } else {
                             style.put(mxConstants.STYLE_FILLCOLOR, "red");
@@ -113,6 +125,11 @@ public class GraphVisualization {
 
                     stylesheet.putCellStyle("STYLE_" + vertex, style);
                     ((mxCell) cell).setStyle("STYLE_" + vertex);
+                }
+
+                // Remove nodes with zero edges if visualizeZeroEdges is false
+                if (!visualizeZeroEdges) {
+                    vertexMap.entrySet().removeIf(entry -> edgeCountMap.get(entry.getValue()) == 0);
                 }
             } finally {
                 mxGraph.getModel().endUpdate();
@@ -141,6 +158,30 @@ public class GraphVisualization {
             nodes.add("S" + i);
         }
         return nodes;
+    }
+
+    private static int countSumWays(int num, int minN, int maxN) {
+        int count = 0;
+        for (int i = minN; i <= maxN; i++) {
+            for (int j = i + 1; j <= maxN; j++) {
+                if (i + j == num) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    private static int countProductWays(int num, int minN, int maxN) {
+        int count = 0;
+        for (int i = minN; i <= maxN; i++) {
+            for (int j = i + 1; j <= maxN; j++) {
+                if (i * j == num) {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 
     private static boolean isPrime(int num) {
