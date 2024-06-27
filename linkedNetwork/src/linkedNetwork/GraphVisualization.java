@@ -21,7 +21,7 @@ import java.util.Set;
 
 public class GraphVisualization {
     public static void main(String[] args) {
-        boolean visualizeZeroEdges = false; // Set this to true to visualize nodes with zero edges
+        boolean visualizeZeroEdges = true; // Set this to true to visualize nodes with zero edges
 
         for (int k = 1; k <= 20; k++) {
             
@@ -99,7 +99,7 @@ public class GraphVisualization {
                     Map<String, Object> style = new HashMap<>();
                     if (vertex.startsWith("S")) {
                         int num = Integer.parseInt(vertex.substring(1));
-                        int ways = countSumWays(num, minN, maxN);
+                        int ways = countSumWays(num, minN, num);
                         if (ways == 0) {
                             style.put(mxConstants.STYLE_FILLCOLOR, "grey");
                         } else if (ways == 1) {
@@ -111,7 +111,7 @@ public class GraphVisualization {
                         }
                     } else if (vertex.startsWith("P")) {
                         int num = Integer.parseInt(vertex.substring(1));
-                        int ways = countProductWays(num, minN, maxN);
+                        int ways = countProductWays(num, minN, num);
                         if (ways == 0) {
                             style.put(mxConstants.STYLE_FILLCOLOR, "grey");
                         } else if (ways == 1) {
