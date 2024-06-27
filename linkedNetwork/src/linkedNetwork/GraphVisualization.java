@@ -154,7 +154,7 @@ public class GraphVisualization {
     private static Set<String> generateNodesFromPairs(int minN, int maxN, int difference) {
         Set<String> nodes = new HashSet<>();
         for (int i = minN; i <= maxN; i++) {
-            for (int j = i + difference; j <= maxN; j++) {
+            for (int j = i + difference; 2*i <= j && j <= maxN; j++) {
                 nodes.add("P" + (i * j));
                 nodes.add("S" + (i + j));
             }
@@ -225,7 +225,7 @@ class PairVectorSpace {
     public static Set<Pair> generatePairs(int minN, int maxN, int difference) {
         Set<Pair> pairs = new HashSet<>();
         for (int i = minN; i <= maxN; i++) {
-            for (int j = i + difference; j <= maxN; j++) {
+            for (int j = i + difference; 2*i <= j && j <= maxN; j++) {
                 pairs.add(new Pair(i, j));
             }
         }
