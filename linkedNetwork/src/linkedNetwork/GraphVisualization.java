@@ -24,7 +24,7 @@ public class GraphVisualization {
     public static void main(String[] args) {
         boolean visualizeZeroEdges = true; // Set this to true to visualize nodes with zero edges
 
-        for (int k = 100; k <= 100; k++) {
+        for (int k = 1; k <= 20; k++) {
             // Define the range for P and S nodes
             int difference = 1;
             int proportion = 0;
@@ -137,20 +137,20 @@ public class GraphVisualization {
             }
 
             // Use an organic layout to position the nodes
-            mxIGraphLayout layout = new mxOrganicLayout(mxGraph);
-            layout.execute(parent);
+//            mxIGraphLayout layout = new mxOrganicLayout(mxGraph);
+//            layout.execute(parent);
 
             // Export the graph as an image
-            BufferedImage image = mxCellRenderer.createBufferedImage(mxGraph, null, 2, java.awt.Color.WHITE, true, null);
-            if (image != null) {
-                try {
-                    ImageIO.write(image, "PNG", new File(String.format("graph-N=%s.png", maxN)));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                System.out.println("Failed to render the graph for N = " + maxN);
-            }
+//            BufferedImage image = mxCellRenderer.createBufferedImage(mxGraph, null, 2, java.awt.Color.WHITE, true, null);
+//            if (image != null) {
+//                try {
+//                    ImageIO.write(image, "PNG", new File(String.format("graph-N=%s.png", maxN)));
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            } else {
+//                System.out.println("Failed to render the graph for N = " + maxN);
+//            }
 
             // Export the table as a CSV file
             try (FileWriter csvWriter = new FileWriter(String.format("pairs-N=%s.csv", maxN))) {
