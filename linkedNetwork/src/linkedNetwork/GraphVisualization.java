@@ -13,6 +13,7 @@ import com.mxgraph.view.mxStylesheet;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,10 +24,10 @@ public class GraphVisualization {
     public static void main(String[] args) {
         boolean visualizeZeroEdges = true; // Set this to true to visualize nodes with zero edges
 
-        for (int k = 1; k <= 30; k++) {
+        for (int k = 100; k <= 100; k++) {
             // Define the range for P and S nodes
-        	int difference = 1;
-        	int proportion = 0;
+            int difference = 1;
+            int proportion = 0;
             int minN = 1;
             int maxN = k;
 
@@ -41,7 +42,8 @@ public class GraphVisualization {
             for (Pair pair : pairs) {
                 String first = "P" + (pair.first * pair.second);
                 String second = "S" + (pair.first + pair.second);
-                String third = String.format("(%1$s,%2$s)", pair.first, pair.second);
+                String steps = StepsToSolve.stepsToSolve(pair, minN, maxN, difference, 0);
+                String third = String.format("(%1$s,%2$s)%3$s", pair.first, pair.second, steps);
                 rules.add(new Rule(first, second, third, true));
             }
 
@@ -94,7 +96,7 @@ public class GraphVisualization {
 
                     if (vertex.startsWith("S")) {
                         int num = Integer.parseInt(vertex.substring(1));
-                        int ways = countSumWays(num, minN, maxN, difference, proportion);
+                        int ways = countSumWays(num, minN, maxN, difference);
                         if (ways == 0) {
                             style.put(mxConstants.STYLE_FILLCOLOR, "grey");
                         } else if (ways == 1) {
@@ -149,13 +151,24 @@ public class GraphVisualization {
             } else {
                 System.out.println("Failed to render the graph for N = " + maxN);
             }
+
+            // Export the table as a CSV file
+            try (FileWriter csvWriter = new FileWriter(String.format("pairs-N=%s.csv", maxN))) {
+                csvWriter.append("x,y,s\n");
+                for (Pair pair : pairs) {
+                    String steps = StepsToSolve.stepsToSolve(pair, minN, maxN, difference, 0);
+                    csvWriter.append(String.format("%d,%d,%s\n", pair.first, pair.second, steps));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     private static Set<String> generateNodesFromPairs(int minN, int maxN, int difference, int proportion) {
         Set<String> nodes = new HashSet<>();
         for (int i = minN; i <= maxN; i++) {
-            for (int j = max(i + difference,proportion*i); j <= maxN; j++) {
+            for (int j = Math.max(i + difference, proportion * i); j <= maxN; j++) {
                 nodes.add("P" + (i * j));
                 nodes.add("S" + (i + j));
             }
@@ -163,9 +176,9 @@ public class GraphVisualization {
         return nodes;
     }
 
-    private static int countSumWays(int num, int minN, int maxN, int difference, int proportion) {
+    private static int countSumWays(int num, int minN, int maxN, int difference) {
         int count = 0;
-        int numMaxN = max(num,maxN);
+        int numMaxN = Math.max(num, maxN);
         for (int i = minN; i <= numMaxN; i++) {
             for (int j = i + difference; j <= numMaxN; j++) {
                 if (i + j == num) {
@@ -178,7 +191,7 @@ public class GraphVisualization {
 
     private static int countProductWays(int num, int minN, int maxN, int difference) {
         int count = 0;
-        int numMaxN = max(num,maxN);
+        int numMaxN = Math.max(num, maxN);
         for (int i = minN; i <= numMaxN; i++) {
             for (int j = i + difference; j <= numMaxN; j++) {
                 if (i * j == num) {
@@ -187,50 +200,6 @@ public class GraphVisualization {
             }
         }
         return count;
-    }
-
-    private static int max(int a, int b) {
-        return (a > b) ? a : b;
-    }
-}
-
-class Pair {
-    public final int first;
-    public final int second;
-
-    public Pair(int first, int second) {
-        this.first = first;
-        this.second = second;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("(%d, %d)", first, second);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Pair pair = (Pair) o;
-        return first == pair.first && second == pair.second;
-    }
-
-    @Override
-    public int hashCode() {
-        return 31 * first + second;
-    }
-}
-
-class PairVectorSpace {
-    public static Set<Pair> generatePairs(int minN, int maxN, int difference, int proportion) {
-        Set<Pair> pairs = new HashSet<>();
-        for (int i = minN; i <= maxN; i++) {
-            for (int j = max(i + difference,proportion*i); j <= maxN; j++) {
-                pairs.add(new Pair(i, j));
-            }
-        }
-        return pairs;
     }
 
     private static int max(int a, int b) {
