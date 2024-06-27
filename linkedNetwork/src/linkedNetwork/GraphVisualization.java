@@ -26,14 +26,15 @@ public class GraphVisualization {
         for (int k = 1; k <= 30; k++) {
             // Define the range for P and S nodes
         	int difference = 1;
+        	int proportion = 0;
             int minN = 1;
             int maxN = k;
 
             // Generate nodes based on all possible pairs
-            Set<String> nodeSet = generateNodesFromPairs(minN, maxN, difference);
+            Set<String> nodeSet = generateNodesFromPairs(minN, maxN, difference, proportion);
 
             // Generate all possible pairs
-            Set<Pair> pairs = PairVectorSpace.generatePairs(minN, maxN, difference);
+            Set<Pair> pairs = PairVectorSpace.generatePairs(minN, maxN, difference, proportion);
 
             // Define rules for creating edges
             Set<Rule> rules = new HashSet<>();
@@ -93,7 +94,7 @@ public class GraphVisualization {
 
                     if (vertex.startsWith("S")) {
                         int num = Integer.parseInt(vertex.substring(1));
-                        int ways = countSumWays(num, minN, maxN, difference);
+                        int ways = countSumWays(num, minN, maxN, difference, proportion);
                         if (ways == 0) {
                             style.put(mxConstants.STYLE_FILLCOLOR, "grey");
                         } else if (ways == 1) {
@@ -151,10 +152,10 @@ public class GraphVisualization {
         }
     }
 
-    private static Set<String> generateNodesFromPairs(int minN, int maxN, int difference) {
+    private static Set<String> generateNodesFromPairs(int minN, int maxN, int difference, int proportion) {
         Set<String> nodes = new HashSet<>();
         for (int i = minN; i <= maxN; i++) {
-            for (int j = max(i + difference,2*i); j <= maxN; j++) {
+            for (int j = max(i + difference,proportion*i); j <= maxN; j++) {
                 nodes.add("P" + (i * j));
                 nodes.add("S" + (i + j));
             }
@@ -162,7 +163,7 @@ public class GraphVisualization {
         return nodes;
     }
 
-    private static int countSumWays(int num, int minN, int maxN, int difference) {
+    private static int countSumWays(int num, int minN, int maxN, int difference, int proportion) {
         int count = 0;
         int numMaxN = max(num,maxN);
         for (int i = minN; i <= numMaxN; i++) {
@@ -222,10 +223,10 @@ class Pair {
 }
 
 class PairVectorSpace {
-    public static Set<Pair> generatePairs(int minN, int maxN, int difference) {
+    public static Set<Pair> generatePairs(int minN, int maxN, int difference, int proportion) {
         Set<Pair> pairs = new HashSet<>();
         for (int i = minN; i <= maxN; i++) {
-            for (int j = max(i + difference,2*i); j <= maxN; j++) {
+            for (int j = max(i + difference,proportion*i); j <= maxN; j++) {
                 pairs.add(new Pair(i, j));
             }
         }
