@@ -23,28 +23,25 @@ public class GraphVisualization {
     public static void main(String[] args) {
         boolean visualizeZeroEdges = true; // Set this to true to visualize nodes with zero edges
 
-        for (int k = 1; k <= 20; k++) {
-            
+        for (int k = 1; k <= 30; k++) {
             // Define the range for P and S nodes
-            int minN = 0;
+        	int difference = 7;
+            int minN = 1;
             int maxN = k;
-            int minP = 0; // must be 2
-            int maxP = maxN * (maxN - 1);
-            int minS = 0; // must be 1
-            int maxS = maxN + (maxN - 1);
 
-            // Generate nodes
-            Set<String> nodeSet = generateNodes(minP, maxP, minS, maxS);
+            // Generate nodes based on all possible pairs
+            Set<String> nodeSet = generateNodesFromPairs(minN, maxN, difference);
+
+            // Generate all possible pairs
+            Set<Pair> pairs = PairVectorSpace.generatePairs(minN, maxN, difference);
 
             // Define rules for creating edges
             Set<Rule> rules = new HashSet<>();
-            for (int i = minN; i <= maxN; i++) {
-                for (int j = i + 1; j <= maxN; j++) {
-                    String first = "P" + (i * j);
-                    String second = "S" + (i + j);
-                    String third = String.format("(%1$s,%2$s)", i, j);
-                    rules.add(new Rule(first, second, third, true));
-                }
+            for (Pair pair : pairs) {
+                String first = "P" + (pair.first * pair.second);
+                String second = "S" + (pair.first + pair.second);
+                String third = String.format("(%1$s,%2$s)", pair.first, pair.second);
+                rules.add(new Rule(first, second, third, true));
             }
 
             // Generate the graph using the rules
@@ -55,16 +52,23 @@ public class GraphVisualization {
             Object parent = mxGraph.getDefaultParent();
 
             Map<String, Object> vertexMap = new HashMap<>();
-            Map<Object, Integer> edgeCountMap = new HashMap<>();
+            Map<String, Integer> edgeCountMap = new HashMap<>();
 
             mxGraph.getModel().beginUpdate();
             try {
+                // Add vertices to the mxGraph and initialize edge counts
+                for (String node : nodeSet) {
+                    Object vertex = mxGraph.insertVertex(parent, null, node, 100, 100, 30, 30);
+                    vertexMap.put(node, vertex);
+                    edgeCountMap.put(node, 0);
+                }
+
                 // Add edges to the mxGraph and update edge counts
                 for (DefaultEdge edge : graph.edgeSet()) {
                     String source = graph.getEdgeSource(edge);
                     String target = graph.getEdgeTarget(edge);
                     String label = "";
-                    
+
                     // Apply labels based on rules
                     for (Rule rule : rules) {
                         if (rule.matches(source, target)) {
@@ -75,19 +79,9 @@ public class GraphVisualization {
 
                     Object sourceVertex = vertexMap.get(source);
                     Object targetVertex = vertexMap.get(target);
-                    if (sourceVertex == null) {
-                        sourceVertex = mxGraph.insertVertex(parent, null, source, 100, 100, 30, 30);
-                        vertexMap.put(source, sourceVertex);
-                        edgeCountMap.put(sourceVertex, 0);
-                    }
-                    if (targetVertex == null) {
-                        targetVertex = mxGraph.insertVertex(parent, null, target, 100, 100, 30, 30);
-                        vertexMap.put(target, targetVertex);
-                        edgeCountMap.put(targetVertex, 0);
-                    }
                     mxGraph.insertEdge(parent, null, label, sourceVertex, targetVertex);
-                    edgeCountMap.put(sourceVertex, edgeCountMap.get(sourceVertex) + 1);
-                    edgeCountMap.put(targetVertex, edgeCountMap.get(targetVertex) + 1);
+                    edgeCountMap.put(source, edgeCountMap.get(source) + 1);
+                    edgeCountMap.put(target, edgeCountMap.get(target) + 1);
                 }
 
                 // Apply colors based on new rules
@@ -95,11 +89,11 @@ public class GraphVisualization {
                 for (Map.Entry<String, Object> entry : vertexMap.entrySet()) {
                     String vertex = entry.getKey();
                     Object cell = entry.getValue();
-
                     Map<String, Object> style = new HashMap<>();
+
                     if (vertex.startsWith("S")) {
                         int num = Integer.parseInt(vertex.substring(1));
-                        int ways = countSumWays(num, minN, num);
+                        int ways = countSumWays(num, minN, maxN, difference);
                         if (ways == 0) {
                             style.put(mxConstants.STYLE_FILLCOLOR, "grey");
                         } else if (ways == 1) {
@@ -111,7 +105,7 @@ public class GraphVisualization {
                         }
                     } else if (vertex.startsWith("P")) {
                         int num = Integer.parseInt(vertex.substring(1));
-                        int ways = countProductWays(num, minN, num);
+                        int ways = countProductWays(num, minN, maxN, difference);
                         if (ways == 0) {
                             style.put(mxConstants.STYLE_FILLCOLOR, "grey");
                         } else if (ways == 1) {
@@ -129,7 +123,11 @@ public class GraphVisualization {
 
                 // Remove nodes with zero edges if visualizeZeroEdges is false
                 if (!visualizeZeroEdges) {
-                    vertexMap.entrySet().removeIf(entry -> edgeCountMap.get(entry.getValue()) == 0);
+                    for (Map.Entry<String, Object> entry : vertexMap.entrySet()) {
+                        if (edgeCountMap.get(entry.getKey()) == 0) {
+                            mxGraph.getModel().remove(entry.getValue());
+                        }
+                    }
                 }
             } finally {
                 mxGraph.getModel().endUpdate();
@@ -141,29 +139,34 @@ public class GraphVisualization {
 
             // Export the graph as an image
             BufferedImage image = mxCellRenderer.createBufferedImage(mxGraph, null, 2, java.awt.Color.WHITE, true, null);
-            try {
-                ImageIO.write(image, "PNG", new File(String.format("graph-N=%s.png", maxN)));
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (image != null) {
+                try {
+                    ImageIO.write(image, "PNG", new File(String.format("graph-N=%s.png", maxN)));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                System.out.println("Failed to render the graph for N = " + maxN);
             }
         }
     }
 
-    private static Set<String> generateNodes(int minP, int maxP, int minS, int maxS) {
+    private static Set<String> generateNodesFromPairs(int minN, int maxN, int difference) {
         Set<String> nodes = new HashSet<>();
-        for (int i = minP; i <= maxP; i++) {
-            nodes.add("P" + i);
-        }
-        for (int i = minS; i <= maxS; i++) {
-            nodes.add("S" + i);
+        for (int i = minN; i <= maxN; i++) {
+            for (int j = i + difference; j <= maxN; j++) {
+                nodes.add("P" + (i * j));
+                nodes.add("S" + (i + j));
+            }
         }
         return nodes;
     }
 
-    private static int countSumWays(int num, int minN, int maxN) {
+    private static int countSumWays(int num, int minN, int maxN, int difference) {
         int count = 0;
-        for (int i = minN; i <= maxN; i++) {
-            for (int j = i + 1; j <= maxN; j++) {
+        int numMaxN = max(num,maxN);
+        for (int i = minN; i <= numMaxN; i++) {
+            for (int j = i + difference; j <= numMaxN; j++) {
                 if (i + j == num) {
                     count++;
                 }
@@ -172,10 +175,11 @@ public class GraphVisualization {
         return count;
     }
 
-    private static int countProductWays(int num, int minN, int maxN) {
+    private static int countProductWays(int num, int minN, int maxN, int difference) {
         int count = 0;
-        for (int i = minN; i <= maxN; i++) {
-            for (int j = i + 1; j <= maxN; j++) {
+        int numMaxN = max(num,maxN);
+        for (int i = minN; i <= numMaxN; i++) {
+            for (int j = i + difference; j <= numMaxN; j++) {
                 if (i * j == num) {
                     count++;
                 }
@@ -184,27 +188,47 @@ public class GraphVisualization {
         return count;
     }
 
-    private static boolean isPrime(int num) {
-        if (num <= 1) return false;
-        for (int i = 2; i * i <= num; i++) {
-            if (num % i == 0) return false;
-        }
-        return true;
+    private static int max(int a, int b) {
+        return (a > b) ? a : b;
+    }
+}
+
+class Pair {
+    public final int first;
+    public final int second;
+
+    public Pair(int first, int second) {
+        this.first = first;
+        this.second = second;
     }
 
-    private static boolean isPrimeSquare(int num) {
-        int sqrt = (int) Math.sqrt(num);
-        return sqrt * sqrt == num && isPrime(sqrt);
+    @Override
+    public String toString() {
+        return String.format("(%d, %d)", first, second);
     }
 
-    private static boolean isProductOfTwoPrimes(int num) {
-        int count = 0;
-        for (int i = 2; i <= num / 2; i++) {
-            if (num % i == 0 && isPrime(i)) {
-                count++;
-                if (count > 2) return false;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Pair pair = (Pair) o;
+        return first == pair.first && second == pair.second;
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * first + second;
+    }
+}
+
+class PairVectorSpace {
+    public static Set<Pair> generatePairs(int minN, int maxN, int difference) {
+        Set<Pair> pairs = new HashSet<>();
+        for (int i = minN; i <= maxN; i++) {
+            for (int j = i + difference; j <= maxN; j++) {
+                pairs.add(new Pair(i, j));
             }
         }
-        return count == 2;
+        return pairs;
     }
 }
