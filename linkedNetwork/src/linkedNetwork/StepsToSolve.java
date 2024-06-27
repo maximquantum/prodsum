@@ -2,10 +2,10 @@ package linkedNetwork;
 
 public class StepsToSolve {
 
-    public static final int maxS = 5;
+    public static final int maxS = 4;
 
     public static String stepsToSolve(Pair pair, int minN, int maxN, int difference, int depth) {
-        if (depth > maxS) {
+        if (depth >= maxS) {
             return "X"; // Return "X" to indicate it exceeded the limit
         }
 
