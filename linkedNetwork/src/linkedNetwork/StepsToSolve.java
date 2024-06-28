@@ -11,6 +11,7 @@ public class StepsToSolve {
 
         int x = pair.first;
         int y = pair.second;
+        int d = pair.distance;
 
         if (x == 1 && (HelperFunctions.isPrime(y, HelperFunctions.generatePrimes(maxP)) || HelperFunctions.isPrimeSquare(y, HelperFunctions.generatePrimes(maxP)))) {
             return "1";
@@ -20,7 +21,7 @@ public class StepsToSolve {
 
             // sum path
             int sumSteps = Integer.MAX_VALUE;
-            for (Pair sumPair : HelperFunctions.pairsFromSum(S, minN, difference)) {
+            for (Pair sumPair : HelperFunctions.pairsFromSum(S, d, minN, difference)) {
                 if (!sumPair.equals(pair)) {
                     String steps = stepsToSolve(sumPair, minN, maxP, difference, depth + 1);
                     if (!steps.equals("X")) { // Only consider valid steps
@@ -34,7 +35,7 @@ public class StepsToSolve {
 
             // product path
             int productSteps = Integer.MAX_VALUE;
-            for (Pair productPair : HelperFunctions.pairsFromProduct(P, minN, difference)) {
+            for (Pair productPair : HelperFunctions.pairsFromProduct(P, d, minN, difference)) {
                 if (!productPair.equals(pair)) {
                     String steps = stepsToSolve(productPair, minN, maxP, difference, depth + 1);
                     if (!steps.equals("X")) { // Only consider valid steps

@@ -24,7 +24,7 @@ public class GraphVisualization {
     public static void main(String[] args) {
         boolean visualizeZeroEdges = true; // Set this to true to visualize nodes with zero edges
 
-        for (int k = 1; k <= 10; k++) {
+        for (int k = 1; k <= 20; k++) {
             // Define the range for P and S nodes
             int difference = 1;
             int proportion = 0;
@@ -37,7 +37,7 @@ public class GraphVisualization {
 
             for (int p : primes) {
                 if (p <= maxP) {
-                    Pair pair = new Pair(1, p);
+                    Pair pair = new Pair(1, p, 1);
                     rootPairs.add(pair);
                     nodes.add("P" + (pair.first * pair.second));
                     nodes.add("S" + (pair.first + pair.second));
@@ -46,7 +46,7 @@ public class GraphVisualization {
             for (int p : primes) {
                 int pSquare = p * p;
                 if (pSquare <= maxP) {
-                    Pair pair = new Pair(1, pSquare);
+                    Pair pair = new Pair(1, pSquare, 1);
                     rootPairs.add(pair);
                     nodes.add("P" + (pair.first * pair.second));
                     nodes.add("S" + (pair.first + pair.second));
@@ -62,26 +62,26 @@ public class GraphVisualization {
             // Find S4 pairs
             Set<Pair> s4Pairs = new HashSet<>();
             for (Pair pair : allPairs) {
-                if (StepsToSolve.stepsToSolve(pair, minN, maxP, difference, 0).equals("4")) {
+                if (pair.distance == 4) {
                     s4Pairs.add(pair);
                 }
             }
 
             // Part 2: Generate edges and nodes up to three steps from S4 nodes
-//            generateEdgesAndNodes(s4Pairs, nodes, minN, maxP, difference, rules, 3);
+            generateEdgesAndNodes(s4Pairs, nodes, minN, maxP, difference, rules, 3);
 
             // Generate the graph using the rules
             Graph<String, DefaultEdge> graph = GraphGenerator.generateGraph(nodes, rules);
 
             // Export the table as a CSV file
             try (FileWriter csvWriter = new FileWriter(String.format("pairs-P=%s.csv", maxP))) {
-                csvWriter.append("x,y,s\n");
+                csvWriter.append("x,y,d,s\n");
                 for (Pair pair : s4Pairs) {
                     String steps = StepsToSolve.stepsToSolve(pair, minN, maxP, difference, 0);
                     if ("4".equals(steps)) {
-                        csvWriter.append(String.format("%d,%d,%s\n", pair.first, pair.second, steps));
+                        csvWriter.append(String.format("%d,%d,%d,%s\n", pair.first, pair.second, pair.distance, steps));
                     } else {
-                        csvWriter.append(String.format("%d,%d,X\n", pair.first, pair.second));
+                        csvWriter.append(String.format("%d,%d,%d,X\n", pair.first, pair.second, pair.distance));
                     }
                 }
             } catch (IOException e) {
@@ -199,9 +199,12 @@ public class GraphVisualization {
             for (Pair pair : currentPairs) {
                 int S = pair.first + pair.second;
                 int P = pair.first * pair.second;
-                
-                for (Pair sumPair : HelperFunctions.pairsFromSum(S, minN, difference)) {
-                    nextPairs.add(sumPair);
+                int d = pair.distance;
+                int newDistance = pair.distance + 1;
+
+                for (Pair sumPair : HelperFunctions.pairsFromSum(S, d, minN, difference)) {
+                    Pair newPair = new Pair(sumPair.first, sumPair.second, newDistance);
+                    nextPairs.add(newPair);
                     nodes.add("S" + S);
                     nodes.add("P" + (sumPair.first * sumPair.second));
                     String first = "S" + S;
@@ -210,24 +213,23 @@ public class GraphVisualization {
                     String third = String.format("(%1$s,%2$s)%3$s", sumPair.first, sumPair.second, steps);
                     rules.add(new Rule(first, second, third, true));
                 }
-                
-                for (Pair productPair : HelperFunctions.pairsFromProduct(P, minN, difference)) {
-                    nextPairs.add(productPair);
-                    nodes.add("P" + P);
-                    nodes.add("S"+ (productPair.first + productPair.second));
-                    String first = "P" + P;
-                    String second = "S" + (productPair.first + productPair.second);
-                    String steps = StepsToSolve.stepsToSolve(productPair, minN, maxP, difference, 0);
-                    String third = String.format("(%1$s,%2$s)%3$s", productPair.first, productPair.second, steps);
-                    rules.add(new Rule(first, second, third, true));
-                }
-            
-            }
-            currentPairs = nextPairs;
-            pairs.addAll(nextPairs);
-        }
-    }
-    
+
+	            for (Pair productPair : HelperFunctions.pairsFromProduct(P, d, minN, difference)) {
+	            	Pair newPair = new Pair(productPair.first, productPair.second, newDistance);
+	            	nextPairs.add(newPair);
+	            	nodes.add("P" + P);
+	            	nodes.add("S" + (productPair.first + productPair.second));
+	            	String first = "P" + P;
+	            	String second = "S" + (productPair.first + productPair.second);
+	            	String steps = StepsToSolve.stepsToSolve(productPair, minN, maxP, difference, 0);
+	            	String third = String.format("(%1$s,%2$s)%3$s", productPair.first, productPair.second, steps);
+	            	rules.add(new Rule(first, second, third, true));
+	        	}
+        	}
+        	currentPairs = nextPairs;
+        	pairs.addAll(nextPairs);
+    	}
+	}
     private static int countSumWays(int num, int minN, int difference) {
         int count = 0;
         for (int i = minN; i <= num; i++) {

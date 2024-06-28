@@ -1,12 +1,14 @@
 package linkedNetwork;
 
-class Pair {
+public class Pair {
     public final int first;
     public final int second;
+	public final int distance;
 
-    public Pair(int first, int second) {
+    public Pair(int first, int second, int distance) {
         this.first = first;
         this.second = second;
+        this.distance = distance;
     }
 
     @Override

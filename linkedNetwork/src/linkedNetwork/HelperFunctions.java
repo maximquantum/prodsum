@@ -31,24 +31,24 @@ public class HelperFunctions {
         return sqrt * sqrt == num && primes.contains(sqrt);
     }
 
-    public static Set<Pair> pairsFromSum(int sum, int minN, int difference) {
+    public static Set<Pair> pairsFromSum(int sum, int distance, int minN, int difference) {
         Set<Pair> pairs = new HashSet<>();
         for (int i = minN; i <= sum / 2; i++) {
             int j = sum - i;
             if (i < j) {
-                pairs.add(new Pair(i, j));
+                pairs.add(new Pair(i, j, distance+1));
             }
         }
         return pairs;
     }
 
-    public static Set<Pair> pairsFromProduct(int product, int minN, int difference) {
+    public static Set<Pair> pairsFromProduct(int product, int distance, int minN, int difference) {
         Set<Pair> pairs = new HashSet<>();
         for (int i = minN; i * i <= product; i++) {
             if (product % i == 0) {
                 int j = product / i;
                 if (i < j) {
-                    pairs.add(new Pair(i, j));
+                    pairs.add(new Pair(i, j, distance+1));
                 }
             }
         }
